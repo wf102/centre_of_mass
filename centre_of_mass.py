@@ -4,21 +4,26 @@
 from numpy import arccos, arctan2
 from math import sin, cos, radians, degrees, sqrt
 from statistics import mean
+import yaml
 
 radius_earth = 6371e3   # in meters
 
+with open('locations.yaml', 'r') as f:
+    locations = yaml.load(f, Loader=yaml.SafeLoader)
+
+
 class Point():
 
-    def __init__(self, lat, long, alt, weight=1):
+    def __init__(self, lat, lon, alt=0, weight=1):
         
         if(lat>90 or lat<-90):      raise ValueError('Latitude must be in range [-90,90].')
-        if(long>=180 or long<-180): raise ValueError('Longitude must be in range [-180,180].')
+        if(lon>=180 or lon<-180): raise ValueError('Longitude must be in range [-180,180].')
 
         self.theta = radians(90-lat)
-        self.phi = radians(long)
+        self.phi = radians(lon)
 
         self.lat = lat
-        self.long = long
+        self.long = lon
         self.alt = alt
         self.rad = radius_earth + alt
         self.weight = weight
@@ -64,22 +69,18 @@ class COM():
         return Point(lat, long, alt, sum_weight)
 
 
-# define points:
-p_turkdean = Point(51.895846, -2.114565, 0)
-p_rosewood = Point(51.898005, -2.104593, 0)
-p_witney   = Point(51.779955, -1.490665, 0)
-p_bristol = Point(51.453309, -2.588483, 0)
-p_paris = Point(48.85989398981465, 2.2352585254318944, 0)
-p_baltimore = Point(39.28836948143914, -76.62152303086647, 0)
-p_bangalore = Point(12.973712960117666, 77.58698644923022, 0)
-p_hongkong = Point(22.311170317382366, 113.68675044868934, 0)
+
+# Set points from config
+p_chelt = Point(**locations["cheltenham"])
+p_paris = Point(**locations["paris"])
+p_baltimore = Point(**locations["baltimore"])
+p_bangalore = Point(**locations["bangalore"])
+p_hongkong = Point(**locations["hongkong"])
+
 
 # calculate COM:
 c = COM()
-c.add_point(p_turkdean)
-#c.add_point(p_rosewood)
-#c.add_point(p_witney)
-#c.add_point(p_bristol)
+c.add_point(p_chelt)
 c.add_point(p_bangalore)
 c.add_point(p_hongkong)
 c.add_point(p_paris)
