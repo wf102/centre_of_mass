@@ -3,27 +3,22 @@
 
 from numpy import arccos, arctan2
 from math import sin, cos, radians, degrees, sqrt
-from statistics import mean
 import yaml
 
-radius_earth = 6371e3   # in meters
-
-with open('locations.yaml', 'r') as f:
-    locations = yaml.load(f, Loader=yaml.SafeLoader)
-
+radius_earth = 6371e3
 
 class Point():
 
     def __init__(self, lat, lon, alt=0, weight=1):
         
-        if(lat>90 or lat<-90):      raise ValueError('Latitude must be in range [-90,90].')
+        if(lat>90 or lat<-90): raise ValueError('Latitude must be in range [-90,90].')
         if(lon>=180 or lon<-180): raise ValueError('Longitude must be in range [-180,180].')
 
         self.theta = radians(90-lat)
         self.phi = radians(lon)
 
         self.lat = lat
-        self.long = lon
+        self.lon = lon
         self.alt = alt
         self.rad = radius_earth + alt
         self.weight = weight
@@ -33,11 +28,13 @@ class Point():
         self.z = self.rad * cos(self.theta)
 
     def __str__(self):
+        return (
+            f"Lat:    {self.lat:.3f} deg\n"
+            f"Lon:    {self.lon:.3f} deg\n"
+            f"Alt:    {self.alt:.0f} m"
+        )
 
-        return f'({self.lat}, {self.long}, {self.alt}, {self.weight})'
-    
     def __add__(self, other):
-
         return Point(self.x+other.x, self.y+other.y, self.z+other.z, self.weight+other.weight)
 
 class COM():
@@ -68,23 +65,22 @@ class COM():
 
         return Point(lat, long, alt, sum_weight)
 
+def main():
 
+    with open('locations.yaml', 'r') as f:
+        locations = yaml.load(f, Loader=yaml.SafeLoader)
 
-# Set points from config
-p_chelt = Point(**locations["cheltenham"])
-p_paris = Point(**locations["paris"])
-p_baltimore = Point(**locations["baltimore"])
-p_bangalore = Point(**locations["bangalore"])
-p_hongkong = Point(**locations["hongkong"])
+    # Set points from config
+    points = [Point(**locations[location]) for location in locations.keys()]
 
+    # Calculate COM:
+    c = COM()
+    for point in points:
+        c.add_point(point)
 
-# calculate COM:
-c = COM()
-c.add_point(p_chelt)
-c.add_point(p_bangalore)
-c.add_point(p_hongkong)
-c.add_point(p_paris)
-c.add_point(p_baltimore)
+    print('COM:')
+    print(c.get_com())
 
-print('COM:')
-print(c.get_com())
+if __name__ == "__main__":
+
+    main()
